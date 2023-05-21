@@ -32,6 +32,7 @@ async function run() {
       
       const toysCollection = client.db('toyHeaven').collection('allToys');
 
+
       app.get('/all-toys', async (req, res) => {
           const cursor = toysCollection.find();
           const result = await cursor.toArray();
@@ -45,12 +46,47 @@ async function run() {
           res.send(result)
       })
 
+      
+      app.get('/my-toys/:email', async (req, res) => {
+          const email = req.params.email;
+          const query = { seller_email: email };
+          const result = await toysCollection.find(query).toArray();
+          res.send(result)
+      })
+      
+
+
       app.post('/add-toys', async (req, res) => {
           const product = req.body;
-          console.log(product);
           const result = await toysCollection.insertOne(product);
           res.send(result)
       })
+
+      app.put('/all-toys/:id', async (req, res) => {
+        const id = req.params.id;
+        const filter = { _id: new ObjectId(id) };
+          const updatedToys = req.body;
+          const options = { upsert: true };
+        const updateData = {
+            $set: {
+                price: updatedToys.price,
+                quantity: updatedToys.quantity,
+                description:updatedToys.description
+            },
+        };
+        const result = await toysCollection.updateOne(filter, updateData,options);
+        res.send(result);
+      })
+      
+
+      app.delete('/all-toys/:id', async (req, res) => {
+        const id = req.params.id;
+        const query = { _id: new ObjectId(id) }
+        const result = await toysCollection.deleteOne(query);
+        res.send(result);
+      })
+      
+
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
